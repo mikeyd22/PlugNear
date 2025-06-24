@@ -11,8 +11,5 @@
       "src": "/(.*)",
       "dest": "/"
     }
-  ],
-  "env": {
-    "NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN": "@next_public_mapbox_access_token"
-  }
-} 
+  ]
+}
