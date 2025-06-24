@@ -13,7 +13,6 @@
     }
   ],
   "env": {
-    "BACKEND_URL": "@backend_url",
     "NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN": "@next_public_mapbox_access_token"
   }
 } 
