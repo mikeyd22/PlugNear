@@ -44,6 +44,7 @@ export default function Home() {
     const [userPos, setUserPos] = useState<[number, number] | null>(null);
     const [loading, setLoading] = useState(true);
     const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const handleMarkerClick = (stationName: string) => {
         setActiveStation(stationName);
@@ -59,6 +60,7 @@ export default function Home() {
         debounce(async (lat: number, lng: number) => {
             try {
                 setLoading(true);
+                setError(null);
                 const res = await fetch("/api/charging-stations", {
                     method: "POST",
                     headers: {
@@ -66,10 +68,16 @@ export default function Home() {
                     },
                     body: JSON.stringify({ lat, lng }),
                 });
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                
                 const newData = await res.json();
                 setData(newData);
             } catch (error) {
                 console.error("Failed to fetch data:", error);
+                setError("Unable to load charging stations. Please try again later.");
             } finally {
                 setLoading(false);
             }
@@ -86,6 +94,7 @@ export default function Home() {
     useEffect(() => {
         const fetchLocationAndData = async () => {
             setLoading(true);
+            setError(null);
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -106,6 +115,10 @@ export default function Home() {
                                 }),
                             });
 
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+
                             const data = await res.json();
                             setData(data);
                         } catch (error) {
@@ -113,6 +126,7 @@ export default function Home() {
                                 "Failed to fetch data from backend:",
                                 error
                             );
+                            setError("Unable to load charging stations. Please try again later.");
                         } finally {
                             setLoading(false);
                         }
@@ -120,21 +134,43 @@ export default function Home() {
                     async (error) => {
                         console.error("Error fetching location here:", error);
 
-                        // Fallback to fetching unsorted data
-                        const res = await fetch("/api/charging-stations");
-                        const defaultData = await res.json();
-                        setData(defaultData);
-                        setLoading(false);
+                        try {
+                            // Fallback to fetching unsorted data
+                            const res = await fetch("/api/charging-stations");
+                            
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+                            
+                            const defaultData = await res.json();
+                            setData(defaultData);
+                        } catch (error) {
+                            console.error("Failed to fetch fallback data:", error);
+                            setError("Unable to load charging stations. Please try again later.");
+                        } finally {
+                            setLoading(false);
+                        }
                     }
                 );
             } else {
                 console.error("Geolocation is not supported by this browser.");
-                const res = await fetch("/api/charging-stations", {
-                    method: "GET",
-                });
-                const defaultData = await res.json();
-                setData(defaultData);
-                setLoading(false);
+                try {
+                    const res = await fetch("/api/charging-stations", {
+                        method: "GET",
+                    });
+                    
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    
+                    const defaultData = await res.json();
+                    setData(defaultData);
+                } catch (error) {
+                    console.error("Failed to fetch data:", error);
+                    setError("Unable to load charging stations. Please try again later.");
+                } finally {
+                    setLoading(false);
+                }
             }
         };
 
@@ -143,6 +179,26 @@ export default function Home() {
 
     if (loading && data.length === 0) {
         return <Loading />;
+    }
+
+    if (error) {
+        return (
+            <main className="flex h-screen bg-[#18181b] text-white">
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center p-8">
+                        <div className="text-6xl mb-4">⚠️</div>
+                        <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+                        <p className="text-gray-400 mb-6">{error}</p>
+                        <button 
+                            onClick={() => window.location.reload()} 
+                            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </main>
+        );
     }
 
     return (

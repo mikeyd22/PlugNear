@@ -66,48 +66,58 @@ export default function Map({
 
     // Initialize map
     useEffect(() => {
-        if (mapboxToken) {
-            mapboxgl.accessToken = mapboxToken;
-        } else {
+        if (!mapboxToken) {
             console.error("Mapbox token is not defined");
+            return;
         }
         
-        mapRef.current = new mapboxgl.Map({
-            style: "mapbox://styles/mapbox/dark-v11",
-            container: mapContainerRef.current as HTMLElement,
-            center: center,
-            zoom: zoom,
-            pitch: pitch,
-        });
+        mapboxgl.accessToken = mapboxToken;
+        
+        if (!mapContainerRef.current) {
+            console.error("Map container not found");
+            return;
+        }
+        
+        try {
+            mapRef.current = new mapboxgl.Map({
+                style: "mapbox://styles/mapbox/dark-v11",
+                container: mapContainerRef.current as HTMLElement,
+                center: center,
+                zoom: zoom,
+                pitch: pitch,
+            });
 
-        mapRef.current.on("move", () => {
-            if (mapRef.current) {
-                const mapCenter = mapRef.current.getCenter();
-                const mapZoom = mapRef.current.getZoom();
-                const mapPitch = mapRef.current.getPitch();
+            mapRef.current.on("move", () => {
+                if (mapRef.current) {
+                    const mapCenter = mapRef.current.getCenter();
+                    const mapZoom = mapRef.current.getZoom();
+                    const mapPitch = mapRef.current.getPitch();
 
-                setCenter([mapCenter.lng, mapCenter.lat]);
-                setZoom(mapZoom);
-                setPitch(mapPitch);
-            }
-        });
+                    setCenter([mapCenter.lng, mapCenter.lat]);
+                    setZoom(mapZoom);
+                    setPitch(mapPitch);
+                }
+            });
 
-        // Add moveend event listener for dynamic loading
-        mapRef.current.on("moveend", () => {
-            if (mapRef.current) {
-                const mapCenter = mapRef.current.getCenter();
-                onMapMove(mapCenter.lat, mapCenter.lng);
-            }
-        });
+            // Add moveend event listener for dynamic loading
+            mapRef.current.on("moveend", () => {
+                if (mapRef.current) {
+                    const mapCenter = mapRef.current.getCenter();
+                    onMapMove(mapCenter.lat, mapCenter.lng);
+                }
+            });
 
-        setMapInitialized(true);
+            setMapInitialized(true);
+        } catch (error) {
+            console.error("Error initializing map:", error);
+        }
 
         return () => {
             if (mapRef.current) {
                 mapRef.current.remove();
             }
         };
-    }, []); // Only run once for map initialization
+    }, [mapboxToken]); // Add mapboxToken as dependency
 
     // Center map on user location when available
     useEffect(() => {
@@ -195,40 +205,57 @@ export default function Map({
 
     return (
         <div className="h-[60vh] sm:w-full sm:h-full relative bg-red-500/0 rounded-[20px] p-2 sm:p-0">
-            <div
-                id="map-container"
-                ref={mapContainerRef}
-                className="opacity-100"
-            />
-            
-            {/* Loading indicator for dynamic loading */}
-            {loading && (
-                <div className="absolute top-4 right-4 bg-[#27272a]/90 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Loading nearby stations...
+            {!mapboxToken ? (
+                <div className="h-full w-full bg-[#27272a] rounded-[20px] flex items-center justify-center">
+                    <div className="text-center text-white p-6">
+                        <div className="text-4xl mb-4">🗺️</div>
+                        <h3 className="text-lg font-semibold mb-2">Map Not Available</h3>
+                        <p className="text-sm text-gray-400 mb-4">
+                            Mapbox access token is not configured
+                        </p>
+                        <div className="text-xs text-gray-500">
+                            Please set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN environment variable
+                        </div>
+                    </div>
                 </div>
+            ) : (
+                <>
+                    <div
+                        id="map-container"
+                        ref={mapContainerRef}
+                        className="opacity-100"
+                    />
+                    
+                    {/* Loading indicator for dynamic loading */}
+                    {loading && (
+                        <div className="absolute top-4 right-4 bg-[#27272a]/90 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Loading nearby stations...
+                        </div>
+                    )}
+                    
+                    <div className="bg-[#18181b]/90 absolute bottom-10 left-2 sm:bottom-8 sm:left-0 flex flex-col gap-2 m-1 py-2.5 p-2 rounded-[16px]">
+                        <div className="flex items-center gap-0">
+                            <div className="h-3 w-3 rounded-full bg-red-400 flex-none"></div>
+                            <div className="ml-2 rounded-lg px-2 py-1 text-sm w-full bg-red-700/30 text-red-300/90">
+                                unavailable
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-0">
+                            <div className="h-3 w-3 rounded-full bg-green-400 flex-none"></div>
+                            <div className="ml-2 rounded-lg px-2 py-1 text-sm w-full bg-green-800/30 text-green-300/90">
+                                available
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-0">
+                            <div className="h-4 w-4 border-[2px] border-zinc-50 rounded-full bg-blue-400 flex-none"></div>
+                            <div className="ml-2 rounded-lg px-2 py-1 text-sm w-full bg-blue-700/30 text-blue-300/90">
+                                your location
+                            </div>
+                        </div>
+                    </div>
+                </>
             )}
-            
-            <div className="bg-[#18181b]/90 absolute bottom-10 left-2 sm:bottom-8 sm:left-0 flex flex-col gap-2 m-1 py-2.5 p-2 rounded-[16px]">
-                <div className="flex items-center gap-0">
-                    <div className="h-3 w-3 rounded-full bg-red-400 flex-none"></div>
-                    <div className="ml-2 rounded-lg px-2 py-1 text-sm w-full bg-red-700/30 text-red-300/90">
-                        unavailable
-                    </div>
-                </div>
-                <div className="flex items-center gap-0">
-                    <div className="h-3 w-3 rounded-full bg-green-400 flex-none"></div>
-                    <div className="ml-2 rounded-lg px-2 py-1 text-sm w-full bg-green-800/30 text-green-300/90">
-                        available
-                    </div>
-                </div>
-                <div className="flex items-center gap-0">
-                    <div className="h-4 w-4 border-[2px] border-zinc-50 rounded-full bg-blue-400 flex-none"></div>
-                    <div className="ml-2 rounded-lg px-2 py-1 text-sm w-full bg-blue-700/30 text-blue-300/90">
-                        your location
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }
