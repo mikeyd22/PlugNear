@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Map from "@/components/Map";
 import Loading from "@/components/Loading";
+import Debug from "@/components/Debug";
 import Image from "next/image";
 
 import {
@@ -414,6 +415,7 @@ export default function Home() {
                     activeStation={activeStation}
                 />
             </div>
+            <Debug />
         </main>
     );
 }

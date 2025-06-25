@@ -32,6 +32,26 @@ const fallbackData: ChargingStation[] = [
         ],
         coords: [-79.3832, 43.6532],
         distance: 0
+    },
+    {
+        station_name: "Downtown EV Station",
+        station_address: "456 Queen St",
+        station_town: "Toronto",
+        station_status: "available",
+        connections: [
+            {
+                type: "CCS (Type 2)",
+                power: "50 kW",
+                status: "Available"
+            },
+            {
+                type: "CHAdeMO",
+                power: "50 kW",
+                status: "Available"
+            }
+        ],
+        coords: [-79.3764, 43.6532],
+        distance: 0
     }
 ];
 
@@ -43,7 +63,8 @@ export async function POST(req: Request) {
         // Get backend URL from environment variable or use default
         const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
 
-        console.log(`Attempting to connect to backend at: ${backendUrl}`);
+        console.log(`[API] Attempting to connect to backend at: ${backendUrl}`);
+        console.log(`[API] User location: ${lat}, ${lng}`);
 
         // Send the user location to the backend
         const response = await fetch(
@@ -58,16 +79,19 @@ export async function POST(req: Request) {
         );
 
         if (!response.ok) {
-            console.error(`Backend responded with status: ${response.status}`);
+            console.error(`[API] Backend responded with status: ${response.status}`);
+            console.log(`[API] Returning fallback data due to backend error`);
             // Return fallback data instead of error
             return NextResponse.json(fallbackData);
         }
 
         // Get data from backend
         const data: ChargingStation[] = await response.json();
+        console.log(`[API] Successfully received ${data.length} stations from backend`);
         return NextResponse.json(data);
     } catch (error) {
-        console.error("Error in route:", error);
+        console.error("[API] Error in route:", error);
+        console.log(`[API] Returning fallback data due to exception`);
         // Return fallback data instead of error
         return NextResponse.json(fallbackData);
     }
@@ -78,7 +102,7 @@ export async function GET() {
         // Get backend URL from environment variable or use default
         const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
 
-        console.log(`Attempting to connect to backend at: ${backendUrl}`);
+        console.log(`[API] Attempting to connect to backend at: ${backendUrl}`);
 
         // Fetch charging stations without user location
         const response = await fetch(
@@ -89,15 +113,18 @@ export async function GET() {
         );
 
         if (!response.ok) {
-            console.error(`Backend responded with status: ${response.status}`);
+            console.error(`[API] Backend responded with status: ${response.status}`);
+            console.log(`[API] Returning fallback data due to backend error`);
             // Return fallback data instead of error
             return NextResponse.json(fallbackData);
         }
 
         const data: ChargingStation[] = await response.json();
+        console.log(`[API] Successfully received ${data.length} stations from backend`);
         return NextResponse.json(data);
     } catch (error) {
-        console.error("Error in route:", error);
+        console.error("[API] Error in route:", error);
+        console.log(`[API] Returning fallback data due to exception`);
         // Return fallback data instead of error
         return NextResponse.json(fallbackData);
     }
