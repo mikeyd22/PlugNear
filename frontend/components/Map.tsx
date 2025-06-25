@@ -18,6 +18,9 @@ interface ChargingStation {
     distance: number;
 }
 
+// Set the access token from the environment variable
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
+
 export default function Map({
     data,
     handleMarkerClick,
