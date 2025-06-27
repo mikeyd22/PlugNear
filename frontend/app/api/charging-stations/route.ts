@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         const { lat, lng } = await req.json();
 
         // Get backend URL from environment variable or use default
-        const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+        const backendUrl = process.env.BACKEND_URL;
 
         console.log(`[API] Attempting to connect to backend at: ${backendUrl}`);
         console.log(`[API] User location: ${lat}, ${lng}`);
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
 export async function GET() {
     try {
         // Get backend URL from environment variable or use default
-        const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+        const backendUrl = process.env.BACKEND_URL;
 
         console.log(`[API] Attempting to connect to backend at: ${backendUrl}`);
 
