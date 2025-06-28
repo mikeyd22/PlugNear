@@ -2,7 +2,7 @@
 
 **PlugNear** is a web application designed to help electric vehicle owners find charging stations across Ontario, Canada. When you're on the road and need to charge your EV, use **PlugNear** to locate available charging stations in real-time, offering convenient options for charging your vehicle.
 
-![alt text](SpotsDemoImage.png)
+![alt text](.png)
 
 ## Features
 
